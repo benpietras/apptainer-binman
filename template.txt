@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# THIS WILL NOT RUN UNLESS THE APP MODULEFILE HAS BEEN LOADED
+#
+# This will 'run' the apptainer image, which runs whatever was set as the %runscript
+# command inside the .def file.
+#
+# Further args to this script will be passed to the %runscript command.
+
+# These env vars (without the APPTAINER_) will be visible inside the image at runtime
+export APPTAINER_HOME="$HOME"
+export APPTAINER_LANG="$LANG"
+if [ -n "$CUDA_VISIBLE_DEVICES" ]; then 
+   export APPTAINERENV_CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES"
+   # Local var
+   NVIDIAFLAG=--nv
+fi
+
+# Bind real dirs to empty dirs inside the image.
+export APPTAINER_BINDPATH="/mnt"
+
+# Local vars to run the image
+GROUP=$(id -ng)
+IMAGEDIR=$(dirname $0)
+MYNAME=$(basename $0)
+
+# 'run' the image, which will execute the command specified at
+# image build time in the %runscript section of the .def file.
+sg $GROUP -c "apptainer exec $NVIDIAFLAG $THE_SIF binpath $@"
